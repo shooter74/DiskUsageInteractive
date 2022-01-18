@@ -1,0 +1,4 @@
+DiskUsageInteractive
+workspace/*
+*.d
+build/*
