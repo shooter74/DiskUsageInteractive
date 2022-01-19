@@ -70,12 +70,10 @@ winsize Display::GetTerminalSize()
 
 void Display::ClearScreen() { cout << "\033[2J\033[1;1H"; }
 
-std::string LeftJustify(std::string const& str, unsigned int width, char fillChar)
+std::string LeftJustify(std::string str, unsigned int width, char fillChar)
 {
-    if(str.size() <= width)
-        return str + std::string(width - str.size(), fillChar);
-    else
-        return str.substr(0, width);
+    str.resize(width, fillChar);
+    return str;
 }
 
 std::string CenterString(std::string const& str, unsigned int width, char fillChar)
@@ -97,20 +95,18 @@ std::string RightJustify(std::string const& str, unsigned int width, char fillCh
         return str.substr(0, width);
 }
 
-std::string GenerateProgressBar(unsigned int width, unsigned int current, unsigned int total, bool showPercentage, std::string const& fillChar)
+std::string GenerateProgressBar(size_t width, size_t current, size_t total, bool showPercentage, std::string const& fillChar)
 {
     std::string progressBar;
-    unsigned int freeWidth = width-2;
+    size_t freeWidth = width-2;
     char buf[8];
+
+    if(total == 0)      // Protect against divisions by 0
+        total = 1;
 
     if(current > total) // Protect against > 100 %
         current = total;
     
-    if(total == 0)      // Protect against divisions by 0
-        total = 1;
-    
-    progressBar = '[';
-
     if(showPercentage)
     {
         double percentCurrent = 100.*((double)current/(double)total);
@@ -118,13 +114,14 @@ std::string GenerateProgressBar(unsigned int width, unsigned int current, unsign
         sprintf(buf, "%5.1f%% ", percentCurrent);
         progressBar += buf;
     }
-    
-    unsigned int scaledCurrent = (current*freeWidth)/total;
 
-    for(unsigned int i = 0 ; i < scaledCurrent ; i++)
+    progressBar += '[';
+    
+    size_t scaledCurrent = (current*freeWidth)/total;
+
+    for(size_t i = 0 ; i < scaledCurrent ; i++)
         progressBar += fillChar;
-    for(unsigned int i = scaledCurrent ; i < freeWidth ; i++)
-        progressBar += ' ';
+    progressBar += std::string(freeWidth - scaledCurrent, ' ');
 
     progressBar += ']';
 

@@ -33,7 +33,7 @@ class TreeNodeDiskUsage
 		void BuildTree(bool verbose = false, unsigned int screenWidth = 80);
 		
 		/// Prints the tree to the standard output only including the names of the nodes
-		void PrintTree(unsigned int maxDepth = 0xFFFFFFFF, unsigned int depth = 0) const;
+		void PrintTree(unsigned int maxDepth = 0xFFFFFFFF, bool humanReadableSizes = true, size_t parentSize = 0, unsigned int depth = 0) const;
 		
 		/// Returns the number of children of the node.
 		size_t GetChildrenCount() const;
@@ -50,11 +50,11 @@ class TreeNodeDiskUsage
 		/// Returns the path of the node : /path/to/node.bla
 		std::string GetNodePath() const;
 
-		/// Sorts the children of the node by size in descending order. Non-recursive.
-		void SortBySizeDesc();
+		/// Sorts the children of the node by size in descending order.
+		void SortBySizeDesc(bool recursive = false);
 
-		/// Sorts the children of the node by name in ascending order. Non-recursive.
-		void SortByNameAsc();
+		/// Sorts the children of the node by name in ascending order.
+		void SortByNameAsc(bool recursive = false);
 
 		/// Operator used to sort the nodes by size in descending order. Returns true when a.totalSize > b.totalSize.
 		static bool SortOperatorSizeDesc(TreeNodeDiskUsage const& a, TreeNodeDiskUsage const& b);

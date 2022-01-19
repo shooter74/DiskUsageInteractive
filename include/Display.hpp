@@ -60,7 +60,7 @@ class Display
 };
 
 /// Returns a left-justified string containing str, with fillChar used to fill the blank space : "bla", 7 -> "bla    ". If the string is longer than width, it is truncated.
-std::string LeftJustify(std::string const& str, unsigned int width, char fillChar = ' ');
+std::string LeftJustify(std::string str, unsigned int width, char fillChar = ' ');
 
 /// Returns a centered string containing str, with fillChar used to fill the blank space : "bla", 7 -> "  bla  ". If the string is longer than width, it is truncated.
 std::string CenterString(std::string const& str, unsigned int width, char fillChar = ' ');
@@ -69,7 +69,7 @@ std::string CenterString(std::string const& str, unsigned int width, char fillCh
 std::string RightJustify(std::string const& str, unsigned int width, char fillChar = ' ');
 
 /// Creates a progress bar
-std::string GenerateProgressBar(unsigned int width, unsigned int current, unsigned int total, bool showPercentage = true, std::string const& fillChar = "\u25A0");
+std::string GenerateProgressBar(size_t width, size_t current, size_t total, bool showPercentage = true, std::string const& fillChar = "\u25A0");
 
 /// Converts a size in bytes to a human readable size (To, Go, Mo, ko, o).
 /// If SI_units is false, the size will be displayed using powers of 1024 instead of 1000, producing Mio, kio etc.

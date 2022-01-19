@@ -88,7 +88,7 @@ void TreeNodeDiskUsage::BuildTree(bool verbose, unsigned int screenWidth)
 	}
 }
 
-void TreeNodeDiskUsage::PrintTree(unsigned int maxDepth, unsigned int depth) const
+void TreeNodeDiskUsage::PrintTree(unsigned int maxDepth, bool humanReadableSizes, size_t parentSize, unsigned int depth) const
 {
 	if(depth > maxDepth)
 		return;
@@ -98,11 +98,46 @@ void TreeNodeDiskUsage::PrintTree(unsigned int maxDepth, unsigned int depth) con
 		paddedPath = "    " + paddedPath;
 	
 	unsigned int screenWidth = Display::GetTerminalSize().ws_col;
-	std::cout << std::setw(2*screenWidth/5) << std::left << paddedPath
-			  << std::setw(screenWidth/6) << std::right << totalSize << std::setw(screenWidth/6) << totalSizeOnDisk << std::setw(screenWidth/6) << totalElements << "\n";
+	unsigned int pathWidth   = screenWidth/2;
+	unsigned int fieldWidth1 = (screenWidth - pathWidth)/4;
+	unsigned int fieldWidth2 = fieldWidth1;
+
+	if(humanReadableSizes)
+	{
+		fieldWidth1 = 8;
+		fieldWidth2  = (screenWidth - pathWidth - 2*fieldWidth1 - 3)/2;
+	}
+
+	if(depth == 0)
+	{
+		std::cout 	<< std::setw(fieldWidth1) << std::right << "Size"
+					<< CenterString("Percentage", fieldWidth2)
+					<< std::setw(pathWidth) << std::left << "Path"
+					<< std::setw(fieldWidth1) << "Size on disk"
+					<< std::setw(fieldWidth2) << std::right << "Elements contained" << "\n"
+					<< std::string(screenWidth, '-') << "\n";
+		parentSize = totalSize;
+	}
+
+	std::string progressBar = GenerateProgressBar(fieldWidth2, totalSize, parentSize, true, "#");
+
+	if(humanReadableSizes)
+		std::cout << std::setw(fieldWidth1) << std::right << Bytes2HumanReadable(totalSize) << ' '
+				  << std::setw(fieldWidth2) << progressBar << ' '
+				  << std::setw(pathWidth)  << std::left << paddedPath
+				  << std::setw(fieldWidth1) << Bytes2HumanReadable(totalSizeOnDisk)
+				  << std::setw(fieldWidth2) << std::right << totalElements
+				   << "\n";
+	else
+		std::cout << std::setw(fieldWidth1) << std::right << (totalSize) << ' '
+				  << std::setw(fieldWidth2) << progressBar << ' '
+				  << std::setw(pathWidth)  << std::left << paddedPath
+				  << std::setw(fieldWidth1) << (totalSizeOnDisk)
+				  << std::setw(fieldWidth2) << std::right << totalElements
+				   << "\n";
 	if(isFolder)
 		for(unsigned int i = 0 ; i < children.size() ; i++)
-			children[i].PrintTree(maxDepth, depth+1);
+			children[i].PrintTree(maxDepth, humanReadableSizes, totalSize, depth+1);
 }
 
 size_t TreeNodeDiskUsage::GetChildrenCount() const { return children.size(); }
@@ -130,8 +165,21 @@ std::string TreeNodeDiskUsage::GetNodeName() const
 	return path.substr(lastSepPos+1, path.size()-lastSepPos-1);
 }
 
-void TreeNodeDiskUsage::SortBySizeDesc() { std::sort(children.begin(), children.end(), TreeNodeDiskUsage::SortOperatorSizeDesc); }
-void TreeNodeDiskUsage::SortByNameAsc() { std::sort(children.begin(), children.end(), TreeNodeDiskUsage::SortOperatorNameAsc); }
+void TreeNodeDiskUsage::SortBySizeDesc(bool recursive)
+{
+	std::sort(children.begin(), children.end(), TreeNodeDiskUsage::SortOperatorSizeDesc);
+	if(recursive)
+		for(unsigned int i = 0 ; i < children.size() ; i++)
+			children[i].SortBySizeDesc(recursive);
+}
+
+void TreeNodeDiskUsage::SortByNameAsc(bool recursive)
+{
+	std::sort(children.begin(), children.end(), TreeNodeDiskUsage::SortOperatorNameAsc);
+	if(recursive)
+		for(unsigned int i = 0 ; i < children.size() ; i++)
+			children[i].SortByNameAsc(recursive);
+}
 
 bool TreeNodeDiskUsage::SortOperatorSizeDesc(TreeNodeDiskUsage const& a, TreeNodeDiskUsage const& b) { return a.totalSize > b.totalSize; }
 bool TreeNodeDiskUsage::SortOperatorNameAsc(TreeNodeDiskUsage const& a, TreeNodeDiskUsage const& b) { return a.GetNodeName() < b.GetNodeName(); }
