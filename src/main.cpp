@@ -7,18 +7,44 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+//#define D_UNIT_TESTS
+
+#ifdef D_UNIT_TESTS
 void runTests(int argc, char *argv[]);
+#endif
 
 int main(int argc, char *argv[])
 {
+	#ifdef D_UNIT_TESTS
+	runTests(argc, argv);
+	#else
+
+	std::string rootpath = ".";
+
+	// Parse arguments
 	if(argc > 1)
-		runTests(argc, argv);
-	else
-		cerr << "Error : No path given !\n";
+	{
+		rootpath = argv[1];
+	}
+
+	Display display;
+
+	// Scan root path
+	TreeNodeDiskUsage tree(rootpath);
+	cout << "Scanning folder \"" << rootpath << "\" ...\n";
+	tree.BuildTree(true, display.Cols());
+	cout << endl;
+
+	// DEBUG
+	tree.PrintTree(1);
+	tree.SortBySizeDesc(); tree.PrintTree(1);
+	tree.SortByNameAsc(); tree.PrintTree(1);
 	
+	#endif // D_UNIT_TESTS
 	return 0;
 }
 
+#ifdef D_UNIT_TESTS
 void runTests(int /* argc */, char *argv[])
 {
 	if(0)
@@ -144,6 +170,9 @@ void runTests(int /* argc */, char *argv[])
 		d.SetLine(11, "------------------------- Inverted -------------------------");
 		d.HighlightLine(11, true);
 		d.SetLine(12, "        That's normal, bro.                               Really !");
+		d.SetLineCentered(13, "Bonjour tout le monde.");
+		d.SetLineCentered(14, "Tralala c'est moi la pute.", '-');
+		d.SetLineRjustified(15, "Tralala c'est moi la pute, mais a droite de l'ecran.", '-');
 		
 		Display::ClearScreen();
 		d.DrawScreenLines();
@@ -189,3 +218,4 @@ void runTests(int /* argc */, char *argv[])
 		}
 	}
 }
+#endif // D_UNIT_TESTS

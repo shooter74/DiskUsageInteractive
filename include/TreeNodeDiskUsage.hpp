@@ -4,8 +4,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <sys/stat.h>
 #include <dirent.h>
+
+#include <Display.hpp>
 
 #define PRINT_VAR(x); std::cout << #x << "\t= " << (x) << "\n"; 
 
@@ -27,7 +30,7 @@ class TreeNodeDiskUsage
 		bool MatchesFilter() const;
 		
 		/// Builds the whole tree
-		void BuildTree();
+		void BuildTree(bool verbose = false, unsigned int screenWidth = 80);
 		
 		/// Prints the tree to the standard output only including the names of the nodes
 		void PrintTree(unsigned int maxDepth = 0xFFFFFFFF, unsigned int depth = 0) const;
@@ -46,6 +49,17 @@ class TreeNodeDiskUsage
 
 		/// Returns the path of the node : /path/to/node.bla
 		std::string GetNodePath() const;
+
+		/// Sorts the children of the node by size in descending order. Non-recursive.
+		void SortBySizeDesc();
+
+		/// Sorts the children of the node by name in ascending order. Non-recursive.
+		void SortByNameAsc();
+
+		/// Operator used to sort the nodes by size in descending order. Returns true when a.totalSize > b.totalSize.
+		static bool SortOperatorSizeDesc(TreeNodeDiskUsage const& a, TreeNodeDiskUsage const& b);
+		/// Operator used to sort the nodes by size in descending order. Returns true when a.totalSize > b.totalSize.
+		static bool SortOperatorNameAsc(TreeNodeDiskUsage const& a, TreeNodeDiskUsage const& b);
 	
 	protected:
 		/// Cleans the path to remove double slashes, trailing slashes and leading and trailing whitespaces.
@@ -74,6 +88,7 @@ class TreeNodeDiskUsage
 		bool isFolder;									//<! Indicates whether the node is a folder or a file.
 		size_t totalSize;								//<! Total size of the node, taking all children into account.
 		size_t totalSizeOnDisk;							//<! Total size of the node on the disk, taking all children into account.
+		size_t totalElements;							//<! Total number of elements within the node, taking all children into account.
 };
 
 #endif

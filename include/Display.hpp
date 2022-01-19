@@ -2,6 +2,7 @@
 #define H_Display
 
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <string>
 
@@ -23,6 +24,12 @@ class Display
         
         /// Sets the line i to str. /!\ Warning : the line will be truncated at its max length of Cols().
         void SetLine(unsigned int i, std::string const& str);
+
+        /// Sets the line i to str and centers it horizontally on the screen. /!\ Warning : the line will be truncated at its max length of Cols().
+        void SetLineCentered(unsigned int i, std::string const& str, char fillChar = ' ');
+
+        /// Sets the line i to str and justifies it to the right of the screen. /!\ Warning : the line will be truncated at its max length of Cols().
+        void SetLineRjustified(unsigned int i, std::string const& str, char fillChar = ' ');
 
         /// Get reference to "pixel" at row i, column j.
         char & GetPixel(unsigned int i, unsigned int j);
@@ -51,6 +58,15 @@ class Display
 
         std::vector<std::string> lines;//<! Stores the lines of the screen
 };
+
+/// Returns a left-justified string containing str, with fillChar used to fill the blank space : "bla", 7 -> "bla    ". If the string is longer than width, it is truncated.
+std::string LeftJustify(std::string const& str, unsigned int width, char fillChar = ' ');
+
+/// Returns a centered string containing str, with fillChar used to fill the blank space : "bla", 7 -> "  bla  ". If the string is longer than width, it is truncated.
+std::string CenterString(std::string const& str, unsigned int width, char fillChar = ' ');
+
+/// Returns a right-justified string containing str, with fillChar used to fill the blank space : "bla", 7 -> "    bla". If the string is longer than width, it is truncated.
+std::string RightJustify(std::string const& str, unsigned int width, char fillChar = ' ');
 
 /// Creates a progress bar
 std::string GenerateProgressBar(unsigned int width, unsigned int current, unsigned int total, bool showPercentage = true, std::string const& fillChar = "\u25A0");

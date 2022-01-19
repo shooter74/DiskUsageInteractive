@@ -21,6 +21,9 @@ void Display::SetLine(unsigned int i, std::string const& str)
         lines[i] = str.substr(0, Cols());
 }
 
+void Display::SetLineCentered(unsigned int i, std::string const& str, char fillChar) { lines[i] = CenterString(str, Cols(), fillChar); }
+void Display::SetLineRjustified(unsigned int i, std::string const& str, char fillChar) { lines[i] = RightJustify(str, Cols(), fillChar); }
+
 char & Display::GetPixel(unsigned int i, unsigned int j) { return lines[i][j]; }
 
 void Display::ClearScreenLines()
@@ -66,6 +69,33 @@ winsize Display::GetTerminalSize()
 }
 
 void Display::ClearScreen() { cout << "\033[2J\033[1;1H"; }
+
+std::string LeftJustify(std::string const& str, unsigned int width, char fillChar)
+{
+    if(str.size() <= width)
+        return str + std::string(width - str.size(), fillChar);
+    else
+        return str.substr(0, width);
+}
+
+std::string CenterString(std::string const& str, unsigned int width, char fillChar)
+{
+    if(str.size() <= width)
+    {
+        unsigned int freeSpace = (width - str.size())/2;
+        return std::string(freeSpace, fillChar) + str + std::string(freeSpace, fillChar);
+    }
+    else
+        return str.substr(0, width);
+}
+
+std::string RightJustify(std::string const& str, unsigned int width, char fillChar)
+{
+    if(str.size() <= width)
+        return std::string(width - str.size(), fillChar) + str;
+    else
+        return str.substr(0, width);
+}
 
 std::string GenerateProgressBar(unsigned int width, unsigned int current, unsigned int total, bool showPercentage, std::string const& fillChar)
 {

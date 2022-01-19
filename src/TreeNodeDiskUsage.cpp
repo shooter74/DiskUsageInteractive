@@ -5,7 +5,8 @@ TreeNodeDiskUsage::TreeNodeDiskUsage(std::string const& path_, PathFilters const
   path(path_),
   isFolder(false),
   totalSize(0),
-  totalSizeOnDisk(0)
+  totalSizeOnDisk(0),
+  totalElements(0)
 {
 	SanitizePath();
 }
@@ -29,7 +30,7 @@ bool TreeNodeDiskUsage::MatchesFilter() const
 	return true;// Temporary
 }
 
-void TreeNodeDiskUsage::BuildTree()
+void TreeNodeDiskUsage::BuildTree(bool verbose, unsigned int screenWidth)
 {
 	// Build the entire tree starting from the current node
 	
@@ -44,7 +45,8 @@ void TreeNodeDiskUsage::BuildTree()
 	if(stat(path.c_str(), &s) != 0)
 		return;
 	
-	std::cout << "BuildTree:path = " << path << "\n";// DEBUG
+	if(verbose)
+		std::cout << LeftJustify(path, screenWidth) << "\r";
 	
 	isFolder = (s.st_mode & S_IFMT) == S_IFDIR;// True if the path corresponds to a folder
 	//PRINT_VAR((s.st_mode & S_IFMT) == S_IFLNK);// symbolic link
@@ -54,6 +56,7 @@ void TreeNodeDiskUsage::BuildTree()
 	{
 		totalSize = s.st_size;
 		totalSizeOnDisk = s.st_blocks*512;// st_blocks is given in number of blocks of 512 bytes
+		totalElements = 1;
 	}
 	else
 	{
@@ -73,12 +76,12 @@ void TreeNodeDiskUsage::BuildTree()
 				{
 					// Recursively build the sub-tree
 					TreeNodeDiskUsage node(path + "/" + elementname, pathFilters);
-					node.BuildTree();
+					node.BuildTree(verbose);
 					totalSize += node.totalSize;
 					totalSizeOnDisk += node.totalSizeOnDisk;
+					totalElements += node.totalElements;
 					children.push_back(node);
 				}
-				//printf("%s\n", dir->d_name);
 			}
 			closedir(d);
 		}
@@ -90,10 +93,13 @@ void TreeNodeDiskUsage::PrintTree(unsigned int maxDepth, unsigned int depth) con
 	if(depth > maxDepth)
 		return;
 	
+	std::string paddedPath = path;
 	for(unsigned int i = 0 ; i < depth ; i++)
-		std::cout << "    ";
-	//std::cout << path << "\n";
-	std::cout << path << "\t" << totalSize << "\t" << totalSizeOnDisk << "\n";
+		paddedPath = "    " + paddedPath;
+	
+	unsigned int screenWidth = Display::GetTerminalSize().ws_col;
+	std::cout << std::setw(2*screenWidth/5) << std::left << paddedPath
+			  << std::setw(screenWidth/6) << std::right << totalSize << std::setw(screenWidth/6) << totalSizeOnDisk << std::setw(screenWidth/6) << totalElements << "\n";
 	if(isFolder)
 		for(unsigned int i = 0 ; i < children.size() ; i++)
 			children[i].PrintTree(maxDepth, depth+1);
@@ -123,6 +129,12 @@ std::string TreeNodeDiskUsage::GetNodeName() const
 	
 	return path.substr(lastSepPos+1, path.size()-lastSepPos-1);
 }
+
+void TreeNodeDiskUsage::SortBySizeDesc() { std::sort(children.begin(), children.end(), TreeNodeDiskUsage::SortOperatorSizeDesc); }
+void TreeNodeDiskUsage::SortByNameAsc() { std::sort(children.begin(), children.end(), TreeNodeDiskUsage::SortOperatorNameAsc); }
+
+bool TreeNodeDiskUsage::SortOperatorSizeDesc(TreeNodeDiskUsage const& a, TreeNodeDiskUsage const& b) { return a.totalSize > b.totalSize; }
+bool TreeNodeDiskUsage::SortOperatorNameAsc(TreeNodeDiskUsage const& a, TreeNodeDiskUsage const& b) { return a.GetNodeName() < b.GetNodeName(); }
 
 void TreeNodeDiskUsage::SanitizePath()
 {
