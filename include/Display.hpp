@@ -2,10 +2,13 @@
 #define H_Display
 
 #include <iostream>
+#include <vector>
 #include <string>
 
 #include <sys/ioctl.h> //ioctl() and TIOCGWINSZ
 #include <unistd.h> // for STDOUT_FILENO
+
+#include <AnsiTerminal.hpp>
 
 class Display
 {
@@ -14,6 +17,27 @@ class Display
 
         unsigned int Rows() const;
         unsigned int Cols() const;
+
+        /// Returns a constant reference to a given line of the screen.
+        std::string const& GetLine(unsigned int i) const;
+        
+        /// Sets the line i to str. /!\ Warning : the line will be truncated at its max length of Cols().
+        void SetLine(unsigned int i, std::string const& str);
+
+        /// Get reference to "pixel" at row i, column j.
+        char & GetPixel(unsigned int i, unsigned int j);
+
+        /// Clears all the screen lines stored within the object and recreates new empty lines of the right size.
+        void ClearScreenLines();
+
+        /// Draws all the screen lines stored within the object. You must call ClearScreen() in order to draw in-place.
+        void DrawScreenLines();
+
+        /// Updates the screen size stored internally.
+        void UpdateScreenSize();
+
+        /// Highlights the line i by inverting its colors (black on white background).
+        void HighlightLine(unsigned int i, bool highlight);
 
         /// Returns a winsize structure with size.ws_row is the number of rows, size.ws_col is the number of columns.
         static winsize GetTerminalSize();
@@ -24,6 +48,8 @@ class Display
     protected:
         unsigned int screenRows;//<! Number of rows currently displayed in the screen
         unsigned int screenCols;//<! Number of columns currently displayed in the screen
+
+        std::vector<std::string> lines;//<! Stores the lines of the screen
 };
 
 /// Creates a progress bar

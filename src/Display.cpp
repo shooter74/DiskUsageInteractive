@@ -4,13 +4,59 @@ using std::cout;
 
 Display::Display()
 {
+    UpdateScreenSize();
+    ClearScreenLines();
+}
+
+unsigned int Display::Cols() const { return screenCols; }
+unsigned int Display::Rows() const { return screenRows; }
+
+std::string const& Display::GetLine(unsigned int i) const { return lines[i]; }
+
+void Display::SetLine(unsigned int i, std::string const& str)
+{
+    if(str.size() <= Cols())
+        lines[i] = str + std::string(Cols() - str.size(), ' ');
+    else
+        lines[i] = str.substr(0, Cols());
+}
+
+char & Display::GetPixel(unsigned int i, unsigned int j) { return lines[i][j]; }
+
+void Display::ClearScreenLines()
+{
+    lines.clear();
+    std::string emptyLine(screenCols, ' ');
+    for(unsigned int i = 0 ; i < screenRows ; i++)
+        lines.push_back(emptyLine);
+}
+
+void Display::DrawScreenLines()
+{
+    for(unsigned int i = 0 ; i < lines.size() ; i++)
+        cout << lines[i] << "\n";
+}
+
+void Display::UpdateScreenSize()
+{
     winsize size = Display::GetTerminalSize();
     screenCols = size.ws_col;
     screenRows = size.ws_row;
 }
 
-unsigned int Display::Cols() const { return screenCols; }
-unsigned int Display::Rows() const { return screenRows; }
+void Display::HighlightLine(unsigned int i, bool highlight)
+{
+    if(highlight)
+    {
+        if(lines[i].substr(0, 4) != C_INVERT_FG_BG)
+            lines[i] = C_INVERT_FG_BG + lines[i] + C_RESET;
+    }
+    else
+    {
+        if(lines[i].substr(0, 4) == C_INVERT_FG_BG)
+            lines[i] = lines[i].substr(4, lines[i].size()-4-4);
+    }
+}
 
 winsize Display::GetTerminalSize()
 {
