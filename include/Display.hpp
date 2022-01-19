@@ -29,4 +29,9 @@ class Display
 /// Creates a progress bar
 std::string GenerateProgressBar(unsigned int width, unsigned int current, unsigned int total, bool showPercentage = true, std::string const& fillChar = "\u25A0");
 
+/// Converts a size in bytes to a human readable size (To, Go, Mo, ko, o).
+/// If SI_units is false, the size will be displayed using powers of 1024 instead of 1000, producing Mio, kio etc.
+/// The suffix can be specified. Default is 'o' for 'octet'. Use 'b' for bits or 'B' for bytes.
+std::string Bytes2HumanReadable(uint64_t size, bool SI_units = true, const char* suffix = "o");
+
 #endif

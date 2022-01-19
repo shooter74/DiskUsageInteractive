@@ -86,8 +86,34 @@ int main(int argc, char *argv[])
 			PRINT_VAR(GenerateProgressBar(20, 100, 100, true));
 			PRINT_VAR(GenerateProgressBar(50, 666, 1000, true));
 			PRINT_VAR(GenerateProgressBar(50, 1666, 1000, true));
+			PRINT_VAR(GenerateProgressBar(50, 42, 0, true));
+			PRINT_VAR(GenerateProgressBar(50, 0, 0, true));
 
 			PRINT_VAR(GenerateProgressBar(50, 333, 1000, true, "#"));
+		}
+		//if(0)
+		{// test output
+			PRINT_VAR(Bytes2HumanReadable(123ULL, true));
+			PRINT_VAR(Bytes2HumanReadable(1234ULL, true));
+			PRINT_VAR(Bytes2HumanReadable(1234567ULL, true));
+			PRINT_VAR(Bytes2HumanReadable(1234567890ULL, true));
+			PRINT_VAR(Bytes2HumanReadable(1234567890123ULL, true));
+			PRINT_VAR(Bytes2HumanReadable(1234567890123456ULL, true));
+			PRINT_VAR(Bytes2HumanReadable(1234567890123456789ULL, true));
+			cout << "\n";
+			PRINT_VAR(Bytes2HumanReadable(123ULL, false));
+			PRINT_VAR(Bytes2HumanReadable(1234ULL, false));
+			PRINT_VAR(Bytes2HumanReadable(1234567ULL, false));
+			PRINT_VAR(Bytes2HumanReadable(1234567890ULL, false));
+			PRINT_VAR(Bytes2HumanReadable(1234567890123ULL, false));
+			PRINT_VAR(Bytes2HumanReadable(1234567890123456ULL, false));
+			PRINT_VAR(Bytes2HumanReadable(1234567890123456789ULL, false));
+			cout << "\n";
+			PRINT_VAR(Bytes2HumanReadable(1073741824ULL, true));
+			PRINT_VAR(Bytes2HumanReadable(1073741824ULL, false));
+			PRINT_VAR(Bytes2HumanReadable(1000000000ULL, true));
+			PRINT_VAR(Bytes2HumanReadable(1000000000ULL, false));
+			
 		}
 	}
 	else
