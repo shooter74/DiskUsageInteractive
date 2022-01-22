@@ -1,12 +1,14 @@
+#include <test.hpp>
 
-#ifdef D_UNIT_TESTS
-void runTests(int /* argc */, char *argv[])
+void runTests(int argc, char *argv[])
 {
+	std::string rootpath = (argc > 1) ? argv[1] : ".";
+	
 	if(0)
 	{// stat test
-		cout << "Reading '" << argv[1] << "'\n";
+		cout << "Reading '" << rootpath << "'\n";
 		struct stat s;
-		PRINT_VAR(stat(argv[1], &s));
+		PRINT_VAR(stat(rootpath.c_str(), &s));
 		PRINT_VAR(s.st_mode);
 		PRINT_VAR(s.st_mode & S_IFMT);
 		PRINT_VAR((s.st_mode & S_IFMT) == S_IFLNK);// symbolic link
@@ -41,7 +43,8 @@ void runTests(int /* argc */, char *argv[])
 	}
 	if(0)
 	{// basic tree building and printing test
-		TreeNodeDiskUsage tree(argv[1]);
+		Display display;
+		TreeNodeDiskUsage tree(rootpath);
 		cout << "Scanning folder \"" << rootpath << "\" ...\n";
 		tree.BuildTree(true, display.Cols());
 		cout << endl;
@@ -121,7 +124,7 @@ void runTests(int /* argc */, char *argv[])
 		PRINT_VAR(Bytes2HumanReadable(1000000000ULL, false));
 		
 	}
-	//if(0)
+	if(0)
 	{// test screen functions
 		Display d;
 		PRINT_VAR(d.Rows());
@@ -186,5 +189,12 @@ void runTests(int /* argc */, char *argv[])
 			}
 		}
 	}
+	//if(0)
+	{// test EventManager
+		Display display;
+		TreeNodeDiskUsage tree(rootpath);
+		tree.BuildTree(false);
+		EventManager eventManager(display, tree);
+		eventManager.MainEventLoop();
+	}
 }
-#endif // D_UNIT_TESTS

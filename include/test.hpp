@@ -5,13 +5,12 @@
 #include <TreeNodeDiskUsage.hpp>
 #include <Display.hpp>
 #include <AnsiTerminal.hpp>
+#include <EventManager.hpp>
 
 using std::cout;
 using std::cerr;
 using std::endl;
 
-#ifdef D_UNIT_TESTS
 void runTests(int argc, char *argv[]);
-#endif
 
 #endif

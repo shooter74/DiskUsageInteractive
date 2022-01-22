@@ -2,12 +2,13 @@
 #include <TreeNodeDiskUsage.hpp>
 #include <Display.hpp>
 #include <AnsiTerminal.hpp>
+#include <EventManager.hpp>
 
 using std::cout;
 using std::cerr;
 using std::endl;
 
-//#define D_UNIT_TESTS
+#define D_UNIT_TESTS
 
 #include <test.hpp>
 
