@@ -3,6 +3,7 @@
 TreeNodeDiskUsage::TreeNodeDiskUsage(std::string const& path_, PathFilters const* pathFilters_)
 : pathFilters(pathFilters_),
   path(path_),
+  parentNode(NULL),
   isFolder(false),
   totalSize(0),
   totalSizeOnDisk(0),
@@ -143,6 +144,7 @@ void TreeNodeDiskUsage::PrintTree(unsigned int maxDepth, bool humanReadableSizes
 size_t TreeNodeDiskUsage::GetChildrenCount() const { return children.size(); }
 size_t TreeNodeDiskUsage::GetTotalSize() const { return totalSize; }
 size_t TreeNodeDiskUsage::GetTotalSizeOnDisk() const { return totalSizeOnDisk; }
+size_t TreeNodeDiskUsage::GetTotalElements() const { return totalElements; }
 std::string TreeNodeDiskUsage::GetNodePath() const{ return path; }
 
 std::string TreeNodeDiskUsage::GetNodeName() const
@@ -165,12 +167,34 @@ std::string TreeNodeDiskUsage::GetNodeName() const
 	return path.substr(lastSepPos+1, path.size()-lastSepPos-1);
 }
 
+TreeNodeDiskUsage * TreeNodeDiskUsage::GetParent() const { return parentNode; }
+
+bool TreeNodeDiskUsage::IsFolder() const { return isFolder; }
+
+std::vector<TreeNodeDiskUsage> const& TreeNodeDiskUsage::GetChildren() const { return children; }
+
+/// Returns a constant reference to the the child i.
+TreeNodeDiskUsage const& TreeNodeDiskUsage::GetChild(unsigned int i) const { return children[i]; }
+
+/// Returns a reference to the the child i.
+TreeNodeDiskUsage & TreeNodeDiskUsage::GetChild(unsigned int i) { return children[i]; }
+
 void TreeNodeDiskUsage::SortBySizeDesc(bool recursive)
 {
 	std::sort(children.begin(), children.end(), TreeNodeDiskUsage::SortOperatorSizeDesc);
 	if(recursive)
 		for(unsigned int i = 0 ; i < children.size() ; i++)
 			children[i].SortBySizeDesc(recursive);
+}
+
+void TreeNodeDiskUsage::BuildParentLinks()
+{
+	for(unsigned int i = 0 ; i < children.size() ; i++)
+	{
+		children[i].parentNode = this;
+		if(children[i].isFolder)
+			children[i].BuildParentLinks();
+	}
 }
 
 void TreeNodeDiskUsage::SortByNameAsc(bool recursive)
@@ -255,10 +279,4 @@ std::string TreeNodeDiskUsage::ReplaceCharacterInStr(std::string str, char c1, c
 		if(str[i] == c1)
 			str[i] = c2;
 	return str;
-}
-
-void TreeNodeDiskUsage::ComputeTotalSize()
-{
-	// Recursively add all sizes to the current node's size
-	//if()
 }

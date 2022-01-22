@@ -22,8 +22,6 @@ struct PathFilters
 /// \class TreeNodeDiskUsage Implements a node of a tree of the files and folders on a system.
 class TreeNodeDiskUsage
 {
-	friend class Display;
-
 	public:
 		TreeNodeDiskUsage(std::string const& path_, PathFilters const* pathFilters_ = NULL);
 		~TreeNodeDiskUsage();
@@ -45,12 +43,33 @@ class TreeNodeDiskUsage
 		
 		/// Returns the total size of the node on disk, including all its children
 		size_t GetTotalSizeOnDisk() const;
+
+		/// Returns the total number of elements contained within the node, including all its children
+		size_t GetTotalElements() const;
 		
 		/// Returns the name of the node : /path/to/node.bla -> node.bla
 		std::string GetNodeName() const;
 
 		/// Returns the path of the node : /path/to/node.bla
 		std::string GetNodePath() const;
+
+		/// Returns a pointer to the node's parent. Warning : this pointer can be NULL !
+		TreeNodeDiskUsage * GetParent() const;
+
+		/// Returns true if the node corresponds to a folder.
+		bool IsFolder() const;
+
+		/// Returns a constant reference to the list of children of the node.
+		std::vector<TreeNodeDiskUsage> const& GetChildren() const;
+
+		/// Returns a constant reference to the the child i.
+		TreeNodeDiskUsage const& GetChild(unsigned int i) const;
+
+		/// Returns a reference to the the child i.
+		TreeNodeDiskUsage & GetChild(unsigned int i);
+
+		/// Builds the parent links. Must be called after the tree has been built.
+		void BuildParentLinks();
 
 		/// Sorts the children of the node by size in descending order.
 		void SortBySizeDesc(bool recursive = false);
@@ -66,9 +85,6 @@ class TreeNodeDiskUsage
 	protected:
 		/// Cleans the path to remove double slashes, trailing slashes and leading and trailing whitespaces.
 		void SanitizePath();
-		
-		/// Explores the whole tree to compute every node's size, including all their children.
-		void ComputeTotalSize();
 
 		/// Removes the leading character 'c'.
 		static std::string RemoveLeadingCharacter(std::string const& str, char c);
@@ -87,6 +103,7 @@ class TreeNodeDiskUsage
 		
 		std::string path;								//<! Path of the node
 		std::vector<TreeNodeDiskUsage> children;		//<! Stores all the children contained within the folder.
+		TreeNodeDiskUsage * parentNode;					//<! Pointer to the parent of the node.
 		bool isFolder;									//<! Indicates whether the node is a folder or a file.
 		size_t totalSize;								//<! Total size of the node, taking all children into account.
 		size_t totalSizeOnDisk;							//<! Total size of the node on the disk, taking all children into account.

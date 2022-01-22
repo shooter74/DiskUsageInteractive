@@ -77,8 +77,8 @@ void Display::DisplayTreeNode(TreeNodeDiskUsage const& treeNode, size_t topLine,
 
     // Write currently displayed directory using its absolute path. If the path resolution does not succeed, the relative path is displayed
     char absoluteNodePathCstr[4096+1];
-    char *ptr = realpath(treeNode.path.c_str(), absoluteNodePathCstr);
-    std::string absoluteNodePath = (ptr != NULL) ? absoluteNodePathCstr : treeNode.path;
+    char *ptr = realpath(treeNode.GetNodePath().c_str(), absoluteNodePathCstr);
+    std::string absoluteNodePath = (ptr != NULL) ? absoluteNodePathCstr : treeNode.GetNodePath();
     lines[1] = "--- " + LeftJustify(absoluteNodePath + " ", screenCols-5, '-');
 
     size_t availableLines = screenRows - 3;// Number of available lines for the listing
@@ -92,18 +92,18 @@ void Display::DisplayTreeNode(TreeNodeDiskUsage const& treeNode, size_t topLine,
 
     for(size_t i = 0 ; i < MIN(availableLines, treeNode.GetChildrenCount()-topLine) ; i++)
     {
-        TreeNodeDiskUsage const& node = treeNode.children[i+topLine];
+        TreeNodeDiskUsage const& node = treeNode.GetChildren()[i+topLine];
         std::stringstream lineStream;
-        lineStream << RightJustify(Bytes2HumanReadable(node.totalSize, SI_units), fieldWidth1);
-        lineStream << GenerateProgressBar(fieldWidth2, node.totalSize, treeNode.totalSize, true, "#");
-        lineStream << " " << LeftJustify(node.GetNodeName() + ((node.isFolder) ? "/" : " "), fieldWidth3-1);
+        lineStream << RightJustify(Bytes2HumanReadable(node.GetTotalSize(), SI_units), fieldWidth1);
+        lineStream << GenerateProgressBar(fieldWidth2, node.GetTotalSize(), treeNode.GetTotalSize(), true, "#");
+        lineStream << " " << LeftJustify(node.GetNodeName() + ((node.IsFolder()) ? "/" : " "), fieldWidth3-1);
         lines[i+2] = LeftJustify(lineStream.str(), screenCols);
     }
 
     // Write footer
-    std::stringstream footerSstream; footerSstream << "Total disk usage:   " << Bytes2HumanReadable(treeNode.totalSizeOnDisk, SI_units)
-                                                   << "   Apparent size:   " << Bytes2HumanReadable(treeNode.totalSize, SI_units)
-                                                   << "   Items:   " << treeNode.totalElements;
+    std::stringstream footerSstream; footerSstream << "Total disk usage:   " << Bytes2HumanReadable(treeNode.GetTotalSizeOnDisk(), SI_units)
+                                                   << "   Apparent size:   " << Bytes2HumanReadable(treeNode.GetTotalSize(), SI_units)
+                                                   << "   Items:   " << treeNode.GetTotalElements();
     lines[screenRows-1] = std::string(C_INVERT_FG_BG) + LeftJustify(footerSstream.str(), screenCols) + C_RESET;
 }
 

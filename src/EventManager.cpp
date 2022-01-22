@@ -15,10 +15,8 @@ EventManager::EventManager(Display & display_, TreeNodeDiskUsage & rootNode_)
    topLine(0),
    currentLine(0),
    currentNode(&rootNode),
-   parentNode(&rootNode)
-{
-
-}
+   sortType(0)
+{}
 
 EventManager::~EventManager() {}
 
@@ -105,45 +103,108 @@ void EventManager::MainEventLoop()
 
 void EventManager::CallbackArrowUp()
 {
-    std::cout << "CallbackArrowUp\n";
+    std::cout << "CallbackArrowUp\n";// DEBUG
+    if(currentNode == NULL) return;
+    if(currentNode->GetChildrenCount())
+        currentLine = (currentLine - 1) % currentNode->GetChildrenCount();
+    DebugPrintState();
 }
 
 void EventManager::CallbackArrowDown()
 {
-    std::cout << "CallbackArrowDown\n";
+    std::cout << "CallbackArrowDown\n";// DEBUG
+    if(currentNode == NULL) return;
+    if(currentNode->GetChildrenCount())
+        currentLine = (currentLine + 1) % currentNode->GetChildrenCount();
+    DebugPrintState();
 }
 
 void EventManager::CallbackArrowLeft()
 {
-    std::cout << "CallbackArrowLeft\n";
+    std::cout << "CallbackArrowLeft\n";// DEBUG
+    if(currentNode == NULL) return;
+    CallbackBackspace();
 }
 
 void EventManager::CallbackArrowRight()
 {
-    std::cout << "CallbackArrowRight\n";
+    std::cout << "CallbackArrowRight\n";// DEBUG
+    if(currentNode == NULL) return;
+    CallbackEnter();
 }
 
 void EventManager::CallbackEnter()
 {
-    std::cout << "CallbackEnter\n";
+    std::cout << "CallbackEnter\n";// DEBUG
+    if(currentNode == NULL) return;
+    if((size_t)currentLine < currentNode->GetChildrenCount())
+        if(currentNode->GetChild(currentLine).IsFolder())
+        {
+            currentNode = &currentNode->GetChild(currentLine);
+            topLine = 0;
+            currentLine = 0;
+        }
+    DebugPrintState();
 }
 
 void EventManager::CallbackBackspace()
 {
-    std::cout << "CallbackBackspace\n";
+    std::cout << "CallbackBackspace\n";// DEBUG
+    if(currentNode == NULL) return;
+    // Go up one level
+    if(currentNode->GetParent() != NULL)
+    {
+        currentNode = currentNode->GetParent();
+        topLine = 0;
+        currentLine = 0;
+    }
+    DebugPrintState();
 }
 
 void EventManager::CallbackHome()
 {
-    std::cout << "CallbackHome\n";
+    std::cout << "CallbackHome\n";// DEBUG
+    if(currentNode == NULL) return;
+    // Set the current node to be the root node (go back "home").
+    currentNode = &rootNode;
+    topLine = 0;
+    currentLine = 0;
+    DebugPrintState();
 }
 
 void EventManager::CallbackHelp()
 {
-    std::cout << "CallbackHelp\n";
+    std::cout << "CallbackHelp\n";// DEBUG
+    if(currentNode == NULL) return;
+
+    DebugPrintState();
 }
 
 void EventManager::CallbackSort()
 {
-    std::cout << "CallbackSort\n";
+    std::cout << "CallbackSort\n";// DEBUG
+    if(currentNode == NULL) return;
+    sortType = (sortType + 1) % 2;// Cycle through all the sort types.
+    if(sortType == 0)
+        currentNode->SortBySizeDesc();
+    else if(sortType == 1)
+        currentNode->SortByNameAsc();
+    DebugPrintState();
+}
+
+void EventManager::DebugPrintState()
+{
+    PRINT_VAR(&rootNode);
+    PRINT_VAR(topLine);
+    PRINT_VAR(currentLine);
+    PRINT_VAR(currentNode);
+    PRINT_VAR(currentNode->GetParent());
+    PRINT_VAR(sortType);
+
+    if((size_t)currentLine < currentNode->GetChildrenCount())
+    {
+        PRINT_VAR(currentNode->GetChild(currentLine).IsFolder());
+        PRINT_VAR(currentNode->GetChild(currentLine).GetNodePath());
+    }
+    std::cout << "-----------------------------------------------\n";
 }

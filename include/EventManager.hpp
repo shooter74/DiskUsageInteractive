@@ -32,15 +32,17 @@ class EventManager
         void CallbackHome();
         void CallbackHelp();
         void CallbackSort();
+
+        void DebugPrintState();
     
     protected:
         Display & display;
         TreeNodeDiskUsage & rootNode;
 
-        int topLine;        //<! Index of top displayed line (for scrolling)
-        int currentLine;    //<! Currently selected line
-        TreeNodeDiskUsage *currentNode;
-        TreeNodeDiskUsage *parentNode;
+        int topLine;                    //<! Index of top displayed line (for scrolling)
+        int currentLine;                //<! Currently selected line
+        TreeNodeDiskUsage *currentNode; //<! Pointer to the currently displayed node.
+        int sortType;                   //<! Entry sort type : 0 -> size descending, 1 -> name ascending
 };
 
 #endif
