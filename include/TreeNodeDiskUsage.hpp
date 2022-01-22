@@ -22,6 +22,8 @@ struct PathFilters
 /// \class TreeNodeDiskUsage Implements a node of a tree of the files and folders on a system.
 class TreeNodeDiskUsage
 {
+	friend class Display;
+
 	public:
 		TreeNodeDiskUsage(std::string const& path_, PathFilters const* pathFilters_ = NULL);
 		~TreeNodeDiskUsage();

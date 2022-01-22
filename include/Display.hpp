@@ -1,15 +1,19 @@
 #ifndef H_Display
 #define H_Display
 
+#include <cstdlib>
 #include <iostream>
 #include <iomanip>
 #include <vector>
 #include <string>
+#include <sstream>
 
 #include <sys/ioctl.h> //ioctl() and TIOCGWINSZ
 #include <unistd.h> // for STDOUT_FILENO
 
 #include <AnsiTerminal.hpp>
+
+class TreeNodeDiskUsage;
 
 class Display
 {
@@ -46,6 +50,9 @@ class Display
         /// Highlights the line i by inverting its colors (black on white background).
         void HighlightLine(unsigned int i, bool highlight);
 
+        /// Fills the internal lines buffer with the formatted contents of the tree node.
+        void DisplayTreeNode(TreeNodeDiskUsage const& treeNode, size_t topLine = 0, bool SI_units = true);
+
         /// Returns a winsize structure with size.ws_row is the number of rows, size.ws_col is the number of columns.
         static winsize GetTerminalSize();
 
@@ -74,6 +81,6 @@ std::string GenerateProgressBar(size_t width, size_t current, size_t total, bool
 /// Converts a size in bytes to a human readable size (To, Go, Mo, ko, o).
 /// If SI_units is false, the size will be displayed using powers of 1024 instead of 1000, producing Mio, kio etc.
 /// The suffix can be specified. Default is 'o' for 'octet'. Use 'b' for bits or 'B' for bytes.
-std::string Bytes2HumanReadable(uint64_t size, bool SI_units = true, const char* suffix = "o");
+std::string Bytes2HumanReadable(uint64_t size, bool SI_units = true, std::string const& suffix = "o");
 
 #endif

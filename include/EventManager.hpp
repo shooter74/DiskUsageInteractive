@@ -37,8 +37,10 @@ class EventManager
         Display & display;
         TreeNodeDiskUsage & rootNode;
 
-        int currentLine;
+        int topLine;        //<! Index of top displayed line (for scrolling)
+        int currentLine;    //<! Currently selected line
         TreeNodeDiskUsage *currentNode;
+        TreeNodeDiskUsage *parentNode;
 };
 
 #endif

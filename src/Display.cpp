@@ -1,4 +1,12 @@
 #include <Display.hpp>
+#include <TreeNodeDiskUsage.hpp>
+
+// DEBUG
+#ifndef PRINT_VAR
+#define PRINT_VAR(x); std::cout << #x << "\t= " << (x) << "\n"; 
+#endif
+
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 using std::cout;
 
@@ -15,14 +23,14 @@ std::string const& Display::GetLine(unsigned int i) const { return lines[i]; }
 
 void Display::SetLine(unsigned int i, std::string const& str)
 {
-    if(str.size() <= Cols())
-        lines[i] = str + std::string(Cols() - str.size(), ' ');
+    if(str.size() <= screenCols)
+        lines[i] = str + std::string(screenCols - str.size(), ' ');
     else
-        lines[i] = str.substr(0, Cols());
+        lines[i] = str.substr(0, screenCols);
 }
 
-void Display::SetLineCentered(unsigned int i, std::string const& str, char fillChar) { lines[i] = CenterString(str, Cols(), fillChar); }
-void Display::SetLineRjustified(unsigned int i, std::string const& str, char fillChar) { lines[i] = RightJustify(str, Cols(), fillChar); }
+void Display::SetLineCentered(unsigned int i, std::string const& str, char fillChar) { lines[i] = CenterString(str, screenCols, fillChar); }
+void Display::SetLineRjustified(unsigned int i, std::string const& str, char fillChar) { lines[i] = RightJustify(str, screenCols, fillChar); }
 
 char & Display::GetPixel(unsigned int i, unsigned int j) { return lines[i][j]; }
 
@@ -60,6 +68,81 @@ void Display::HighlightLine(unsigned int i, bool highlight)
             lines[i] = lines[i].substr(4, lines[i].size()-4-4);
     }
 }
+
+void Display::DisplayTreeNode(TreeNodeDiskUsage const& treeNode, size_t topLine, bool SI_units)
+{
+    ClearScreenLines();
+    // Write header
+    lines[0] = std::string(C_INVERT_FG_BG) + CenterString("DiskUsageInteractive ~ Use the arrow keys to navigate, press ? or 'h' for help", screenCols) + C_RESET;
+
+    // Write currently displayed directory using its absolute path. If the path resolution does not succeed, the relative path is displayed
+    char absoluteNodePathCstr[4096+1];
+    char *ptr = realpath(treeNode.path.c_str(), absoluteNodePathCstr);
+    std::string absoluteNodePath = (ptr != NULL) ? absoluteNodePathCstr : treeNode.path;
+    lines[1] = "--- " + LeftJustify(absoluteNodePath + " ", screenCols-5, '-');
+
+    size_t availableLines = screenRows - 3;// Number of available lines for the listing
+
+    size_t fieldWidth1 = 10;
+    size_t fieldWidth2 = screenCols/3;
+    size_t fieldWidth3 = screenCols - fieldWidth1 - fieldWidth2;
+
+    if(lines.size() < 3)// Not enough space !
+        return;
+
+    for(size_t i = 0 ; i < MIN(availableLines, treeNode.GetChildrenCount()-topLine) ; i++)
+    {
+        TreeNodeDiskUsage const& node = treeNode.children[i+topLine];
+        std::stringstream lineStream;
+        lineStream << RightJustify(Bytes2HumanReadable(node.totalSize, SI_units), fieldWidth1);
+        lineStream << GenerateProgressBar(fieldWidth2, node.totalSize, treeNode.totalSize, true, "#");
+        lineStream << " " << LeftJustify(node.GetNodeName() + ((node.isFolder) ? "/" : " "), fieldWidth3-1);
+        lines[i+2] = LeftJustify(lineStream.str(), screenCols);
+    }
+
+    // Write footer
+    std::stringstream footerSstream; footerSstream << "Total disk usage:   " << Bytes2HumanReadable(treeNode.totalSizeOnDisk, SI_units)
+                                                   << "   Apparent size:   " << Bytes2HumanReadable(treeNode.totalSize, SI_units)
+                                                   << "   Items:   " << treeNode.totalElements;
+    lines[screenRows-1] = std::string(C_INVERT_FG_BG) + LeftJustify(footerSstream.str(), screenCols) + C_RESET;
+}
+
+/*
+ncdu 1.14.1 ~ Use the arrow keys to navigate, press ? for help                                                    
+--- /home/jerome/codeserver/config/workspace/DiskUsageInteractive ------------------------------------------------
+  952.0 KiB [##########] /build                                                                                   
+  536.0 KiB [#####     ] /.git
+   24.0 KiB [          ] /src
+   16.0 KiB [          ] /include
+e   4.0 KiB [          ] /workspace
+    4.0 KiB [          ]  Makefile
+    4.0 KiB [          ]  .gitignore
+@   0.0   B [          ]  DiskUsageInteractive
+                           ┌───ncdu help─────────────────1:Keys───2:Format───3:About──┐
+                           │                                                          │
+                           │       up, k  Move cursor up                              │
+                           │     down, j  Move cursor down                            │
+                           │ right/enter  Open selected directory                     │
+                           │  left, <, h  Open parent directory                       │
+                           │           n  Sort by name (ascending/descending)         │
+                           │           s  Sort by size (ascending/descending)         │
+                           │           C  Sort by items (ascending/descending)        │
+                           │           M  Sort by mtime (-e flag)                     │
+                           │           d  Delete selected file or directory           │
+                           │           t  Toggle dirs before files when sorting       │
+                           │                        -- more --                        │
+                           │                                         Press q to close │
+                           └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+ Total disk usage:   1.5 MiB  Apparent size:   1.3 MiB  Items: 131              
+*/
 
 winsize Display::GetTerminalSize()
 {
@@ -128,7 +211,7 @@ std::string GenerateProgressBar(size_t width, size_t current, size_t total, bool
     return progressBar;
 }
 
-std::string Bytes2HumanReadable(uint64_t size, bool SI_units, const char* suffix)
+std::string Bytes2HumanReadable(uint64_t size, bool SI_units, std::string const& suffix)
 {
     const uint64_t kilo = (SI_units) ? 1000ULL : 1024ULL;
     const uint64_t mega = kilo*kilo;
@@ -136,32 +219,27 @@ std::string Bytes2HumanReadable(uint64_t size, bool SI_units, const char* suffix
     const uint64_t tera = giga*kilo;
     const uint64_t peta = tera*kilo;
     const uint64_t exa = peta*kilo;
-    //const uint64_t zetta = exa*kilo;
-    //const uint64_t yotta = zetta*kilo;
 
-    char buf[16];
-    std::string fullSuffix = (SI_units) ? std::string(suffix) : (std::string("i") + suffix);
+    std::string fullSuffix = (SI_units) ? suffix : (std::string("i") + suffix);
 
-    //if(size >= yotta)
-    //    sprintf(buf, "%5.1f Y%s", (double)size/yotta, fullSuffix.c_str());
-    //else if(size >= zetta)
-    //    sprintf(buf, "%5.1f Z%s", (double)size/zetta, fullSuffix.c_str());
+    std::stringstream out;
+    out.precision(1);
+    out << std::fixed << std::setw(5) << std::right;
 
     if(size >= exa)
-        sprintf(buf, "%5.1f E%s", (double)size/exa, fullSuffix.c_str());
+        out << (double)size/exa << " E" << fullSuffix;
     else if(size >= peta)
-        sprintf(buf, "%5.1f P%s", (double)size/peta, fullSuffix.c_str());
+        out << (double)size/peta << " P" << fullSuffix;
     else if(size >= tera)
-        sprintf(buf, "%5.1f T%s", (double)size/tera, fullSuffix.c_str());
+        out << (double)size/tera << " T" << fullSuffix;
     else if(size >= giga)
-        sprintf(buf, "%5.1f G%s", (double)size/giga, fullSuffix.c_str());
+        out << (double)size/giga << " G" << fullSuffix;
     else if(size >= mega)
-        sprintf(buf, "%5.1f M%s", (double)size/mega, fullSuffix.c_str());
+        out << (double)size/mega << " M" << fullSuffix;
     else if(size >= kilo)
-        sprintf(buf, "%5.1f k%s", (double)size/kilo, fullSuffix.c_str());
+        out << (double)size/kilo << " k" << fullSuffix;
     else
-        sprintf(buf, "%5.1f %s", (double)size, suffix);
-
-    return std::string(buf);
+        out << (double)size << " " << suffix;
+    return out.str();
 }
 

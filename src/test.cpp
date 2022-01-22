@@ -189,12 +189,22 @@ void runTests(int argc, char *argv[])
 			}
 		}
 	}
-	//if(0)
+	if(0)
 	{// test EventManager
 		Display display;
 		TreeNodeDiskUsage tree(rootpath);
 		tree.BuildTree(false);
 		EventManager eventManager(display, tree);
 		eventManager.MainEventLoop();
+	}
+	//if(0)
+	{// test interactive display of tree node (without interactivity)
+		Display display;
+		TreeNodeDiskUsage tree(rootpath);
+		tree.BuildTree(false);
+		tree.SortBySizeDesc();
+		display.DisplayTreeNode(tree, 0, true);
+		//Display::ClearScreen();
+		display.DrawScreenLines();
 	}
 }

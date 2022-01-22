@@ -11,13 +11,16 @@
 
 EventManager::EventManager(Display & display_, TreeNodeDiskUsage & rootNode_)
  : display(display_),
-   rootNode(rootNode_)
-{}
-
-EventManager::~EventManager()
+   rootNode(rootNode_),
+   topLine(0),
+   currentLine(0),
+   currentNode(&rootNode),
+   parentNode(&rootNode)
 {
 
 }
+
+EventManager::~EventManager() {}
 
 void EventManager::MainEventLoop()
 {
@@ -46,7 +49,8 @@ void EventManager::MainEventLoop()
         if(res > 0)
         {
             char c;
-            read(fileno(stdin), &c, 1);
+            if(read(fileno(stdin), &c, 1) != 1) // read character from stdin
+                break;
             // std::cout << (int)c << " = \"" << c << "\"\n";// DEBUG
 
             // Parse event
