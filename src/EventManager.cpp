@@ -15,8 +15,12 @@ EventManager::EventManager(Display & display_, TreeNodeDiskUsage & rootNode_)
    topLine(0),
    currentLine(0),
    currentNode(&rootNode),
-   sortType(0)
-{}
+   sortType(0),
+   SI_units(true)
+{
+    SortNodeElements();
+    UpdateScreen();
+}
 
 EventManager::~EventManager() {}
 
@@ -70,6 +74,8 @@ void EventManager::MainEventLoop()
                     CallbackHelp();
                 else if(c == 's' || c == 'S')
                     CallbackSort();
+                else if(c == 'u' || c == 'U')
+                    CallbackUnits();
             }
             else
             {
@@ -103,53 +109,50 @@ void EventManager::MainEventLoop()
 
 void EventManager::CallbackArrowUp()
 {
-    std::cout << "CallbackArrowUp\n";// DEBUG
     if(currentNode == NULL) return;
     if(currentNode->GetChildrenCount())
-        currentLine = (currentLine - 1) % currentNode->GetChildrenCount();
-    DebugPrintState();
+        currentLine = ((currentLine - 1) < 0) ? (currentNode->GetChildrenCount() - 1) : ((currentLine - 1) % currentNode->GetChildrenCount());
+    ScrollList();
+    UpdateScreen();
 }
 
 void EventManager::CallbackArrowDown()
 {
-    std::cout << "CallbackArrowDown\n";// DEBUG
     if(currentNode == NULL) return;
     if(currentNode->GetChildrenCount())
         currentLine = (currentLine + 1) % currentNode->GetChildrenCount();
-    DebugPrintState();
+    ScrollList();
+    UpdateScreen();
 }
 
 void EventManager::CallbackArrowLeft()
 {
-    std::cout << "CallbackArrowLeft\n";// DEBUG
     if(currentNode == NULL) return;
     CallbackBackspace();
 }
 
 void EventManager::CallbackArrowRight()
 {
-    std::cout << "CallbackArrowRight\n";// DEBUG
     if(currentNode == NULL) return;
     CallbackEnter();
 }
 
 void EventManager::CallbackEnter()
 {
-    std::cout << "CallbackEnter\n";// DEBUG
     if(currentNode == NULL) return;
     if((size_t)currentLine < currentNode->GetChildrenCount())
         if(currentNode->GetChild(currentLine).IsFolder())
         {
             currentNode = &currentNode->GetChild(currentLine);
+            SortNodeElements();
             topLine = 0;
             currentLine = 0;
         }
-    DebugPrintState();
+    UpdateScreen();
 }
 
 void EventManager::CallbackBackspace()
 {
-    std::cout << "CallbackBackspace\n";// DEBUG
     if(currentNode == NULL) return;
     // Go up one level
     if(currentNode->GetParent() != NULL)
@@ -158,38 +161,70 @@ void EventManager::CallbackBackspace()
         topLine = 0;
         currentLine = 0;
     }
-    DebugPrintState();
+    UpdateScreen();
 }
 
 void EventManager::CallbackHome()
 {
-    std::cout << "CallbackHome\n";// DEBUG
     if(currentNode == NULL) return;
     // Set the current node to be the root node (go back "home").
     currentNode = &rootNode;
     topLine = 0;
     currentLine = 0;
-    DebugPrintState();
+    UpdateScreen();
 }
 
 void EventManager::CallbackHelp()
 {
-    std::cout << "CallbackHelp\n";// DEBUG
     if(currentNode == NULL) return;
-
-    DebugPrintState();
+    
+    UpdateScreen();
 }
 
 void EventManager::CallbackSort()
 {
-    std::cout << "CallbackSort\n";// DEBUG
     if(currentNode == NULL) return;
     sortType = (sortType + 1) % 2;// Cycle through all the sort types.
+    SortNodeElements();
+    UpdateScreen();
+}
+
+void EventManager::CallbackUnits()
+{
+    if(currentNode == NULL) return;
+    SI_units ^= true;// Invert the SI_units flag.
+    UpdateScreen();
+}
+
+void EventManager::ScrollList()
+{
+    /*if(currentNode == NULL) return;
+    if(currentNode->GetChildrenCount())
+    {
+        // compute visibility of selected line and scroll if needed
+        PRINT_VAR(2 + currentLine - topLine);
+        PRINT_VAR(display.Rows()-1);
+        if((2 + currentLine - topLine) >= (display.Rows()-1))
+            topLine = currentLine - (display.Rows() - 2);// DOES NOT WORK. WORK IN PROGRESS.
+    }//*/
+}
+
+void EventManager::SortNodeElements()
+{
+    if(currentNode == NULL) return;
     if(sortType == 0)
         currentNode->SortBySizeDesc();
     else if(sortType == 1)
         currentNode->SortByNameAsc();
-    DebugPrintState();
+}
+
+void EventManager::UpdateScreen()
+{
+    //DebugPrintState(); return;// DEBUG
+    Display::ClearScreen();
+    display.DisplayTreeNode(*currentNode, topLine, SI_units);
+    display.HighlightLine(2 + topLine + currentLine, true);
+    display.DrawScreenLines();
 }
 
 void EventManager::DebugPrintState()

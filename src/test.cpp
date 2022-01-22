@@ -203,7 +203,7 @@ void runTests(int argc, char *argv[])
 		Display display;
 		TreeNodeDiskUsage tree(rootpath);
 		tree.BuildTree(false);
-		tree.SortBySizeDesc();
+		tree.SortBySizeDesc(true);
 		display.DisplayTreeNode(tree, 0, true);
 		//Display::ClearScreen();
 		display.DrawScreenLines();

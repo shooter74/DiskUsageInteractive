@@ -8,7 +8,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-#define D_UNIT_TESTS
+//#define D_UNIT_TESTS
 
 #include <test.hpp>
 
@@ -82,7 +82,12 @@ int main(int argc, char *argv[])
 		tree.PrintTree(maxDepth, true);
 	
 	// Interactive mode : the user can navigate through the tree structure.
-	// else
+	else
+	{
+		tree.BuildParentLinks();
+		EventManager eventManager(display, tree);
+		eventManager.MainEventLoop();
+	}
 
 	return 0;
 }

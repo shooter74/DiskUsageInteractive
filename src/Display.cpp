@@ -57,15 +57,18 @@ void Display::UpdateScreenSize()
 
 void Display::HighlightLine(unsigned int i, bool highlight)
 {
-    if(highlight)
+    if(i < lines.size())
     {
-        if(lines[i].substr(0, 4) != C_INVERT_FG_BG)
-            lines[i] = C_INVERT_FG_BG + lines[i] + C_RESET;
-    }
-    else
-    {
-        if(lines[i].substr(0, 4) == C_INVERT_FG_BG)
-            lines[i] = lines[i].substr(4, lines[i].size()-4-4);
+        if(highlight)
+        {
+            if(lines[i].substr(0, 4) != C_INVERT_FG_BG)
+                lines[i] = C_INVERT_FG_BG + lines[i] + C_RESET;
+        }
+        else
+        {
+            if(lines[i].substr(0, 4) == C_INVERT_FG_BG)
+                lines[i] = lines[i].substr(4, lines[i].size()-4-4);
+        }
     }
 }
 
@@ -99,6 +102,9 @@ void Display::DisplayTreeNode(TreeNodeDiskUsage const& treeNode, size_t topLine,
         lineStream << " " << LeftJustify(node.GetNodeName() + ((node.IsFolder()) ? "/" : " "), fieldWidth3-1);
         lines[i+2] = LeftJustify(lineStream.str(), screenCols);
     }
+
+    if(!treeNode.GetChildrenCount())
+        lines[2] = LeftJustify("   [Empty directory]", screenCols);
 
     // Write footer
     std::stringstream footerSstream; footerSstream << "Total disk usage:   " << Bytes2HumanReadable(treeNode.GetTotalSizeOnDisk(), SI_units)

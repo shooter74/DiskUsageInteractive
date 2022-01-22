@@ -32,6 +32,16 @@ class EventManager
         void CallbackHome();
         void CallbackHelp();
         void CallbackSort();
+        void CallbackUnits();
+
+        /// Computes the visibility of the selected line and scrolls the element list if needed.
+        void ScrollList();
+
+        /// Sorts the elements of the current node according to the sorting method currently selected.
+        void SortNodeElements();
+
+        /// Updates the screen based on the current state.
+        void UpdateScreen();
 
         void DebugPrintState();
     
@@ -43,6 +53,7 @@ class EventManager
         int currentLine;                //<! Currently selected line
         TreeNodeDiskUsage *currentNode; //<! Pointer to the currently displayed node.
         int sortType;                   //<! Entry sort type : 0 -> size descending, 1 -> name ascending
+        bool SI_units;                  //<! Indicates whether SI units should be used.
 };
 
 #endif
