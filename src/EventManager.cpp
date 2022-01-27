@@ -12,12 +12,10 @@
 EventManager::EventManager(Display & display_, TreeNodeDiskUsage & rootNode_)
  : display(display_),
    rootNode(rootNode_),
-   topLine(0),
-   currentLine(0),
    sortType(0),
    SI_units(true)
 {
-    displayedNodes.push_back(&rootNode);
+    displayedNodes.push_back(DisplayedNode(&rootNode, 0, 0));
     SortNodeElements();
     UpdateScreen();
 }
@@ -109,58 +107,52 @@ void EventManager::MainEventLoop()
 
 void EventManager::CallbackArrowUp()
 {
-    if(displayedNodes.back() == NULL) return;
-    if(displayedNodes.back()->GetChildrenCount())
-        currentLine = ((currentLine - 1) < 0) ? (displayedNodes.back()->GetChildrenCount() - 1) : ((currentLine - 1) % displayedNodes.back()->GetChildrenCount());
+    if(displayedNodes.back().node == NULL) return;
+    if(!displayedNodes.back().node->GetChildrenCount()) return;
+    displayedNodes.back().currentLine = ((displayedNodes.back().currentLine - 1) < 0) ? (displayedNodes.back().node->GetChildrenCount() - 1) : ((displayedNodes.back().currentLine - 1) % displayedNodes.back().node->GetChildrenCount());
     ScrollList();
     UpdateScreen();
 }
 
 void EventManager::CallbackArrowDown()
 {
-    if(displayedNodes.back() == NULL) return;
-    if(displayedNodes.back()->GetChildrenCount())
-        currentLine = (currentLine + 1) % displayedNodes.back()->GetChildrenCount();
+    if(displayedNodes.back().node == NULL) return;
+    if(!displayedNodes.back().node->GetChildrenCount()) return;
+    displayedNodes.back().currentLine = (displayedNodes.back().currentLine + 1) % displayedNodes.back().node->GetChildrenCount();
     ScrollList();
     UpdateScreen();
 }
 
 void EventManager::CallbackArrowLeft()
 {
-    if(displayedNodes.back() == NULL) return;
+    if(displayedNodes.back().node == NULL) return;
     CallbackBackspace();
 }
 
 void EventManager::CallbackArrowRight()
 {
-    if(displayedNodes.back() == NULL) return;
+    if(displayedNodes.back().node == NULL) return;
     CallbackEnter();
 }
 
 void EventManager::CallbackEnter()
 {
-    if(displayedNodes.back() == NULL) return;
-    if((size_t)currentLine < displayedNodes.back()->GetChildrenCount())
-        if(displayedNodes.back()->GetChild(currentLine).IsFolder())
+    if(displayedNodes.back().node == NULL) return;
+    if((size_t)displayedNodes.back().currentLine < displayedNodes.back().node->GetChildrenCount())
+        if(displayedNodes.back().node->GetChild(displayedNodes.back().currentLine).IsFolder())
         {
-            displayedNodes.push_back(&displayedNodes.back()->GetChild(currentLine));
+            displayedNodes.push_back(DisplayedNode(&displayedNodes.back().node->GetChild(displayedNodes.back().currentLine), 0, 0));
             SortNodeElements();
-            topLine = 0;
-            currentLine = 0;
         }
     UpdateScreen();
 }
 
 void EventManager::CallbackBackspace()
 {
-    if(displayedNodes.back() == NULL) return;
+    if(displayedNodes.back().node == NULL) return;
     // Go up one level
     if(displayedNodes.size() > 1)
-    {
         displayedNodes.pop_back();
-        topLine = 0;
-        currentLine = 0;
-    }
     UpdateScreen();
 }
 
@@ -168,22 +160,20 @@ void EventManager::CallbackHome()
 {
     // Set the current node to be the root node (go back "home").
     displayedNodes.clear();
-    displayedNodes.push_back(&rootNode);
-    topLine = 0;
-    currentLine = 0;
+    displayedNodes.push_back(DisplayedNode(&rootNode, 0, 0));
     UpdateScreen();
 }
 
 void EventManager::CallbackHelp()
 {
-    if(displayedNodes.back() == NULL) return;
-    
+    if(displayedNodes.back().node == NULL) return;
+    // TODO
     UpdateScreen();
 }
 
 void EventManager::CallbackSort()
 {
-    if(displayedNodes.back() == NULL) return;
+    if(displayedNodes.back().node == NULL) return;
     sortType = (sortType + 1) % 2;// Cycle through all the sort types.
     SortNodeElements();
     UpdateScreen();
@@ -191,15 +181,15 @@ void EventManager::CallbackSort()
 
 void EventManager::CallbackUnits()
 {
-    if(displayedNodes.back() == NULL) return;
+    if(displayedNodes.back().node == NULL) return;
     SI_units ^= true;// Invert the SI_units flag.
     UpdateScreen();
 }
 
 void EventManager::ScrollList()
 {
-    /*if(displayedNodes.back() == NULL) return;
-    if(displayedNodes.back()->GetChildrenCount())
+    /*if(displayedNodes.back().node == NULL) return;
+    if(displayedNodes.back().node->GetChildrenCount())
     {
         // compute visibility of selected line and scroll if needed
         PRINT_VAR(2 + currentLine - topLine);
@@ -211,34 +201,36 @@ void EventManager::ScrollList()
 
 void EventManager::SortNodeElements()
 {
-    if(displayedNodes.back() == NULL) return;
+    if(displayedNodes.back().node == NULL) return;
     if(sortType == 0)
-        displayedNodes.back()->SortBySizeDesc();
+        displayedNodes.back().node->SortBySizeDesc();
     else if(sortType == 1)
-        displayedNodes.back()->SortByNameAsc();
+        displayedNodes.back().node->SortByNameAsc();
 }
 
 void EventManager::UpdateScreen()
 {
     //DebugPrintState(); return;// DEBUG
     Display::ClearScreen();
-    display.DisplayTreeNode(*displayedNodes.back(), topLine, SI_units);
-    display.HighlightLine(2 + topLine + currentLine, true);
+    display.DisplayTreeNode(*displayedNodes.back().node, displayedNodes.back().topLine, SI_units);
+    display.HighlightLine(2 + displayedNodes.back().topLine + displayedNodes.back().currentLine, true);
     display.DrawScreenLines();
 }
 
 void EventManager::DebugPrintState()
 {
     PRINT_VAR(&rootNode);
-    PRINT_VAR(topLine);
-    PRINT_VAR(currentLine);
-    PRINT_VAR(displayedNodes.back());
+    PRINT_VAR(displayedNodes.back().topLine);
+    PRINT_VAR(displayedNodes.back().currentLine);
+    PRINT_VAR(displayedNodes.back().node);
     PRINT_VAR(sortType);
 
-    if((size_t)currentLine < displayedNodes.back()->GetChildrenCount())
+    if((size_t)displayedNodes.back().currentLine < displayedNodes.back().node->GetChildrenCount())
     {
-        PRINT_VAR(displayedNodes.back()->GetChild(currentLine).IsFolder());
-        PRINT_VAR(displayedNodes.back()->GetChild(currentLine).GetNodePath());
+        PRINT_VAR(displayedNodes.back().node->GetChild(displayedNodes.back().currentLine).IsFolder());
+        PRINT_VAR(displayedNodes.back().node->GetChild(displayedNodes.back().currentLine).GetNodePath());
     }
     std::cout << "-----------------------------------------------\n";
 }
+
+DisplayedNode::DisplayedNode(TreeNodeDiskUsage *node_, int topLine_, int currentLine_) : node(node_), topLine(topLine_), currentLine(currentLine_) {}

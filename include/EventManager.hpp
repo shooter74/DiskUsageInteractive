@@ -13,6 +13,16 @@
 #include <Display.hpp>
 #include <TreeNodeDiskUsage.hpp>
 
+/// This structure represents a displayed node, pointing to a tree node
+struct DisplayedNode
+{
+    TreeNodeDiskUsage *node;    //<! Pointer to the tree node.
+    int topLine;                //<! Index of top displayed line (for scrolling).
+    int currentLine;            //<! Currently selected line.
+
+    DisplayedNode(TreeNodeDiskUsage *node_ = NULL, int topLine_ = 0, int currentLine_ = 0);
+};
+
 /// This class manages the keyboard events and triggers actions.
 class EventManager
 {
@@ -50,11 +60,10 @@ class EventManager
         Display & display;
         TreeNodeDiskUsage & rootNode;
 
-        int topLine;                                    //<! Index of top displayed line (for scrolling)
-        int currentLine;                                //<! Currently selected line
-        std::list<TreeNodeDiskUsage*> displayedNodes;   //<! List of pointers to the successively displayed nodes.
-        int sortType;                                   //<! Entry sort type : 0 -> size descending, 1 -> name ascending
-        bool SI_units;                                  //<! Indicates whether SI units should be used.
+        
+        std::list<DisplayedNode> displayedNodes;   //<! List of pointers to the successively displayed nodes.
+        int sortType;                              //<! Entry sort type : 0 -> size descending, 1 -> name ascending.
+        bool SI_units;                             //<! Indicates whether SI units should be used.
 };
 
 #endif
