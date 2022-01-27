@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <list>
 
 #include <Display.hpp>
 #include <TreeNodeDiskUsage.hpp>
@@ -49,11 +50,11 @@ class EventManager
         Display & display;
         TreeNodeDiskUsage & rootNode;
 
-        int topLine;                    //<! Index of top displayed line (for scrolling)
-        int currentLine;                //<! Currently selected line
-        TreeNodeDiskUsage *currentNode; //<! Pointer to the currently displayed node.
-        int sortType;                   //<! Entry sort type : 0 -> size descending, 1 -> name ascending
-        bool SI_units;                  //<! Indicates whether SI units should be used.
+        int topLine;                                    //<! Index of top displayed line (for scrolling)
+        int currentLine;                                //<! Currently selected line
+        std::list<TreeNodeDiskUsage*> displayedNodes;   //<! List of pointers to the successively displayed nodes.
+        int sortType;                                   //<! Entry sort type : 0 -> size descending, 1 -> name ascending
+        bool SI_units;                                  //<! Indicates whether SI units should be used.
 };
 
 #endif

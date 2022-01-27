@@ -14,10 +14,10 @@ EventManager::EventManager(Display & display_, TreeNodeDiskUsage & rootNode_)
    rootNode(rootNode_),
    topLine(0),
    currentLine(0),
-   currentNode(&rootNode),
    sortType(0),
    SI_units(true)
 {
+    displayedNodes.push_back(&rootNode);
     SortNodeElements();
     UpdateScreen();
 }
@@ -109,41 +109,41 @@ void EventManager::MainEventLoop()
 
 void EventManager::CallbackArrowUp()
 {
-    if(currentNode == NULL) return;
-    if(currentNode->GetChildrenCount())
-        currentLine = ((currentLine - 1) < 0) ? (currentNode->GetChildrenCount() - 1) : ((currentLine - 1) % currentNode->GetChildrenCount());
+    if(displayedNodes.back() == NULL) return;
+    if(displayedNodes.back()->GetChildrenCount())
+        currentLine = ((currentLine - 1) < 0) ? (displayedNodes.back()->GetChildrenCount() - 1) : ((currentLine - 1) % displayedNodes.back()->GetChildrenCount());
     ScrollList();
     UpdateScreen();
 }
 
 void EventManager::CallbackArrowDown()
 {
-    if(currentNode == NULL) return;
-    if(currentNode->GetChildrenCount())
-        currentLine = (currentLine + 1) % currentNode->GetChildrenCount();
+    if(displayedNodes.back() == NULL) return;
+    if(displayedNodes.back()->GetChildrenCount())
+        currentLine = (currentLine + 1) % displayedNodes.back()->GetChildrenCount();
     ScrollList();
     UpdateScreen();
 }
 
 void EventManager::CallbackArrowLeft()
 {
-    if(currentNode == NULL) return;
+    if(displayedNodes.back() == NULL) return;
     CallbackBackspace();
 }
 
 void EventManager::CallbackArrowRight()
 {
-    if(currentNode == NULL) return;
+    if(displayedNodes.back() == NULL) return;
     CallbackEnter();
 }
 
 void EventManager::CallbackEnter()
 {
-    if(currentNode == NULL) return;
-    if((size_t)currentLine < currentNode->GetChildrenCount())
-        if(currentNode->GetChild(currentLine).IsFolder())
+    if(displayedNodes.back() == NULL) return;
+    if((size_t)currentLine < displayedNodes.back()->GetChildrenCount())
+        if(displayedNodes.back()->GetChild(currentLine).IsFolder())
         {
-            currentNode = &currentNode->GetChild(currentLine);
+            displayedNodes.push_back(&displayedNodes.back()->GetChild(currentLine));
             SortNodeElements();
             topLine = 0;
             currentLine = 0;
@@ -153,11 +153,11 @@ void EventManager::CallbackEnter()
 
 void EventManager::CallbackBackspace()
 {
-    if(currentNode == NULL) return;
+    if(displayedNodes.back() == NULL) return;
     // Go up one level
-    if(currentNode->GetParent() != NULL)
+    if(displayedNodes.size() > 1)
     {
-        currentNode = currentNode->GetParent();
+        displayedNodes.pop_back();
         topLine = 0;
         currentLine = 0;
     }
@@ -166,9 +166,9 @@ void EventManager::CallbackBackspace()
 
 void EventManager::CallbackHome()
 {
-    if(currentNode == NULL) return;
     // Set the current node to be the root node (go back "home").
-    currentNode = &rootNode;
+    displayedNodes.clear();
+    displayedNodes.push_back(&rootNode);
     topLine = 0;
     currentLine = 0;
     UpdateScreen();
@@ -176,14 +176,14 @@ void EventManager::CallbackHome()
 
 void EventManager::CallbackHelp()
 {
-    if(currentNode == NULL) return;
+    if(displayedNodes.back() == NULL) return;
     
     UpdateScreen();
 }
 
 void EventManager::CallbackSort()
 {
-    if(currentNode == NULL) return;
+    if(displayedNodes.back() == NULL) return;
     sortType = (sortType + 1) % 2;// Cycle through all the sort types.
     SortNodeElements();
     UpdateScreen();
@@ -191,15 +191,15 @@ void EventManager::CallbackSort()
 
 void EventManager::CallbackUnits()
 {
-    if(currentNode == NULL) return;
+    if(displayedNodes.back() == NULL) return;
     SI_units ^= true;// Invert the SI_units flag.
     UpdateScreen();
 }
 
 void EventManager::ScrollList()
 {
-    /*if(currentNode == NULL) return;
-    if(currentNode->GetChildrenCount())
+    /*if(displayedNodes.back() == NULL) return;
+    if(displayedNodes.back()->GetChildrenCount())
     {
         // compute visibility of selected line and scroll if needed
         PRINT_VAR(2 + currentLine - topLine);
@@ -211,18 +211,18 @@ void EventManager::ScrollList()
 
 void EventManager::SortNodeElements()
 {
-    if(currentNode == NULL) return;
+    if(displayedNodes.back() == NULL) return;
     if(sortType == 0)
-        currentNode->SortBySizeDesc();
+        displayedNodes.back()->SortBySizeDesc();
     else if(sortType == 1)
-        currentNode->SortByNameAsc();
+        displayedNodes.back()->SortByNameAsc();
 }
 
 void EventManager::UpdateScreen()
 {
     //DebugPrintState(); return;// DEBUG
     Display::ClearScreen();
-    display.DisplayTreeNode(*currentNode, topLine, SI_units);
+    display.DisplayTreeNode(*displayedNodes.back(), topLine, SI_units);
     display.HighlightLine(2 + topLine + currentLine, true);
     display.DrawScreenLines();
 }
@@ -232,14 +232,13 @@ void EventManager::DebugPrintState()
     PRINT_VAR(&rootNode);
     PRINT_VAR(topLine);
     PRINT_VAR(currentLine);
-    PRINT_VAR(currentNode);
-    PRINT_VAR(currentNode->GetParent());
+    PRINT_VAR(displayedNodes.back());
     PRINT_VAR(sortType);
 
-    if((size_t)currentLine < currentNode->GetChildrenCount())
+    if((size_t)currentLine < displayedNodes.back()->GetChildrenCount())
     {
-        PRINT_VAR(currentNode->GetChild(currentLine).IsFolder());
-        PRINT_VAR(currentNode->GetChild(currentLine).GetNodePath());
+        PRINT_VAR(displayedNodes.back()->GetChild(currentLine).IsFolder());
+        PRINT_VAR(displayedNodes.back()->GetChild(currentLine).GetNodePath());
     }
     std::cout << "-----------------------------------------------\n";
 }

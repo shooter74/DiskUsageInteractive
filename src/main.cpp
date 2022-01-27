@@ -84,7 +84,6 @@ int main(int argc, char *argv[])
 	// Interactive mode : the user can navigate through the tree structure.
 	else
 	{
-		tree.BuildParentLinks();
 		EventManager eventManager(display, tree);
 		eventManager.MainEventLoop();
 	}

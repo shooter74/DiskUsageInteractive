@@ -68,9 +68,6 @@ class TreeNodeDiskUsage
 		/// Returns a reference to the the child i.
 		TreeNodeDiskUsage & GetChild(unsigned int i);
 
-		/// Builds the parent links. Must be called after the tree has been built.
-		void BuildParentLinks();
-
 		/// Sorts the children of the node by size in descending order.
 		void SortBySizeDesc(bool recursive = false);
 
@@ -103,7 +100,6 @@ class TreeNodeDiskUsage
 		
 		std::string path;								//<! Path of the node
 		std::vector<TreeNodeDiskUsage> children;		//<! Stores all the children contained within the folder.
-		TreeNodeDiskUsage * parentNode;					//<! Pointer to the parent of the node.
 		bool isFolder;									//<! Indicates whether the node is a folder or a file.
 		size_t totalSize;								//<! Total size of the node, taking all children into account.
 		size_t totalSizeOnDisk;							//<! Total size of the node on the disk, taking all children into account.

@@ -3,7 +3,6 @@
 TreeNodeDiskUsage::TreeNodeDiskUsage(std::string const& path_, PathFilters const* pathFilters_)
 : pathFilters(pathFilters_),
   path(path_),
-  parentNode(NULL),
   isFolder(false),
   totalSize(0),
   totalSizeOnDisk(0),
@@ -167,8 +166,6 @@ std::string TreeNodeDiskUsage::GetNodeName() const
 	return path.substr(lastSepPos+1, path.size()-lastSepPos-1);
 }
 
-TreeNodeDiskUsage * TreeNodeDiskUsage::GetParent() const { return parentNode; }
-
 bool TreeNodeDiskUsage::IsFolder() const { return isFolder; }
 
 std::vector<TreeNodeDiskUsage> const& TreeNodeDiskUsage::GetChildren() const { return children; }
@@ -185,16 +182,6 @@ void TreeNodeDiskUsage::SortBySizeDesc(bool recursive)
 	if(recursive)
 		for(unsigned int i = 0 ; i < children.size() ; i++)
 			children[i].SortBySizeDesc(recursive);
-}
-
-void TreeNodeDiskUsage::BuildParentLinks()
-{
-	for(unsigned int i = 0 ; i < children.size() ; i++)
-	{
-		children[i].parentNode = this;
-		if(children[i].isFolder)
-			children[i].BuildParentLinks();
-	}
 }
 
 void TreeNodeDiskUsage::SortByNameAsc(bool recursive)

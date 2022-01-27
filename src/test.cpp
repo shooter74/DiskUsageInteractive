@@ -194,7 +194,6 @@ void runTests(int argc, char *argv[])
 		Display display;
 		TreeNodeDiskUsage tree(rootpath);
 		tree.BuildTree(false);
-		tree.BuildParentLinks();
 		EventManager eventManager(display, tree);
 		eventManager.MainEventLoop();
 	}
